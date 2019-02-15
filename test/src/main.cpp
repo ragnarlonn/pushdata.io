@@ -2,11 +2,11 @@
 #include <Wire.h>
 #include <U8g2lib.h>
 #include <ESP8266WiFi.h>
-#include "Pushdata_ESP8266.h"
+#include "Pushdata_ESP8266_SSL.h"
 
 U8X8_SSD1306_128X32_UNIVISION_SW_I2C u8x8(/* clock=*/ SCL, /* data=*/ SDA, /* reset=*/ 16);   // Adafruit Feather ESP8266/32u4 Boards + FeatherWing OLED
 
-Pushdata_ESP8266 pd;
+Pushdata_ESP8266_SSL pd;
 
 void OLEDOutput(const char *s1, const char *s2) {
   u8x8.clearLine(2);
@@ -28,8 +28,9 @@ void setup() {
   u8x8.setFont(u8x8_font_chroma48medium8_r);
   u8x8.draw2x2UTF8(0, 0, "NodeMCU");
   OLEDOutput("Starting...", "");
-  WiFi.begin("Goto 10", "datorbyxa");
-  while (WiFi.status() != WL_CONNECTED) {
+  pd.setEmail("ragnar@lonn.org");
+  pd.setApiKey("sq53rb8ozvdufcq2ayzq");
+  while (pd.connectWiFi("Goto 10", "datorbyxa") != WL_CONNECTED) {
     OLEDOutput("Connecting...", "");
     delay(500);
     OLEDOutput("", "");
@@ -37,12 +38,6 @@ void setup() {
   }
   OLEDOutput("Connected!", "");
   delay(1500);
-  OLEDOutput("Pushdata init", "");
-  if (pd.begin() != 1) {
-    OLEDOutput("PD init fail!", "");
-    Serial.println("pd.begin() failed!");
-    while(1);
-  }
 }
 
 int pos = 0;
