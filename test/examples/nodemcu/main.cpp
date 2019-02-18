@@ -1,5 +1,5 @@
 #include <Arduino.h>
-#include <Wire.h>
+// #include <Wire.h>
 #include <U8g2lib.h>
 #include <ESP8266WiFi.h>
 #include "Pushdata_ESP8266_SSL.h"
