@@ -46,6 +46,16 @@ class Pushdata_ESP8266_SSL {
         void setApiKey(const char *key) {
             strncpy(apikey, key, 20);
         }
+        void setCPUSpeed(unsigned int speed) {
+            switch (speed) {
+                case 80:
+                case 160:
+                    cpu_speed = speed;
+                    break;
+                default:
+                    Serial.println("Pushdata_ESP8266_SSL: Error: CPU speed must be 80 or 160");
+            }
+        }
         // Send data without a TS name, to be tagged with device MAC address
         int send(float value) {
             static char tsname[20];
@@ -88,6 +98,9 @@ class Pushdata_ESP8266_SSL {
                 Serial.println("Pushdata_ESP8266_SSL: Error: you must set either an email or an api key");
                 return 0;
             }
+            // Set CPU frequency to either 80 or 160 Mhz
+            // 160 is default, unless user has called setCPUSpeed()
+            system_update_cpu_freq(cpu_speed);
             DBGPRINTHLN("BearSSL::WifiClientSecure init");
             BearSSL::WiFiClientSecure client;
             DBGPRINTHLN("BearSSLPublicKey init");
@@ -165,6 +178,7 @@ class Pushdata_ESP8266_SSL {
         char apikey[21] = "";
         char email[51] = "";
         bool connecting = false;
+        unsigned int cpu_speed = 160;
         int _httpPOST(BearSSL::WiFiClientSecure *client, const char *queryParam, const char *payload) {
             int written = 0;
             written += client->print(String("POST /api/timeseries?") + queryParam + " HTTP/1.1\r\n");

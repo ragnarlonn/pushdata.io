@@ -66,5 +66,4 @@ void loop() {
     pd.send((float)millis());
     OLEDOutput("Sleeping", bufs[pos]);
   }
-  // put your main code here, to run repeatedly:
 }
