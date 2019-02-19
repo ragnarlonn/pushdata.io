@@ -36,8 +36,17 @@ void setup() {
   u8x8.setFont(u8x8_font_chroma48medium8_r);
   u8x8.draw2x2UTF8(0, 0, "NodeMCU");
   OLEDOutput("Starting...", "");
-  pd.setEmail("ragnar@lonn.org");
-  pd.setApiKey("sq53rb8ozvdufcq2ayzq");
+    // Fallback to using nerdy_gull123@example.com email
+  pd.setEmail("nerdy_gnu123@example.com");
+  // Try to use user-defined EMAIL and/or APIKEY
+  #ifdef PUSHDATA_EMAIL
+  if (strlen(String(PUSHDATA_EMAIL).c_str()) > 0)
+    pd.setEmail(String(PUSHDATA_EMAIL).c_str());
+  #endif
+  #ifdef PUSHDATA_APIKEY
+  if (strlen(String(PUSHDATA_APIKEY).c_str()) > 0)
+    pd.setApiKey(String(PUSHDATA_APIKEY).c_str());
+  #endif
   while (pd.connectWiFi(ssid, passwd) != WL_CONNECTED) {
     OLEDOutput("Connecting...", "");
     delay(500);
