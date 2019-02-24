@@ -9,11 +9,11 @@ U8X8_SSD1306_128X32_UNIVISION_SW_I2C u8x8(/* clock=*/ SCL, /* data=*/ SDA, /* re
 
 Pushdata_ESP8266_SSL pd;
 
-char ssid[] = "Goto 10";
-char passwd[] = "datorbyxa";
+//char ssid[] = "Goto 10";
+//char passwd[] = "datorbyxa";
 
-//char ssid[] = "APA";
-//char passwd[] = "deadbeef42";
+char ssid[] = "APA";
+char passwd[] = "deadbeef42";
 
 void OLEDOutput(const char *s1, const char *s2) {
   u8x8.clearLine(2);
@@ -32,30 +32,29 @@ void setup() {
   u8x8.begin();
   u8x8.setPowerSave(0);
   u8x8.setFont(u8x8_font_chroma48medium8_r);
-  u8x8.draw2x2UTF8(0, 0, "NodeMCU");
+  u8x8.draw2x2UTF8(0, 0, "Pushdata");
   OLEDOutput("Starting...", "");
-  // Fallback to using nerdy_gull123@example.com email
+  // Fallback to using nerdy_gnu123@example.com email
   pd.setEmail("nerdy_gnu123@example.com");
-  // Try to use user-defined EMAIL and/or APIKEY
-  #ifdef PUSHDATA_EMAIL
-  if (strlen(String(PUSHDATA_EMAIL).c_str()) > 0)
-    pd.setEmail(String(PUSHDATA_EMAIL).c_str());
-  #endif
-  #ifdef PUSHDATA_APIKEY
-  if (strlen(String(PUSHDATA_APIKEY).c_str()) > 0)
-    pd.setApiKey(String(PUSHDATA_APIKEY).c_str());
-  #endif
   while (pd.connectWiFi(ssid, passwd) != WL_CONNECTED) {
     OLEDOutput("Connecting...", "");
-    delay(500);
+    delay(600);
     OLEDOutput("", "");
-    delay(250);
+    delay(200);
   }
   OLEDOutput("Connected!", "");
+  char buf[12];
+  char outbuf[20];
+  WiFi.macAddress((uint8_t*)buf);
+  sprintf(outbuf, "%02x:%02x:%02x:%02x:%02x:%02x", buf[0], buf[1], buf[2], buf[3], buf[4], buf[5]);
+  Serial.print("Ethernet MAC address = "); Serial.println(outbuf);
+  Serial.println("************************************************************"); 
+  Serial.println("**** Now transmitting data every minute to pushdata.io! ****");
+  Serial.println("**** Go to https://pushdata.io/nerdy_gnu123@example.com ****");
+  Serial.print("**** and click on the time series \""); Serial.print(outbuf); Serial.println("\"   ****");
+  Serial.println("************************************************************"); 
   delay(1500);
 }
-
-int pos = 0;
 
 void loop() {
   unsigned long now = millis();

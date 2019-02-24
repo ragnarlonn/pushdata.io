@@ -56,7 +56,7 @@ class Pushdata_ESP8266_SSL {
                     Serial.println("Pushdata_ESP8266_SSL: Error: CPU speed must be 80 or 160");
             }
         }
-        // Send data without a TS name, to be tagged with device MAC address
+        // Send data without a TS name, which uses its ethernet MAC address as the name
         int send(float value) {
             static char tsname[20];
             uint8_t mac[6];
@@ -100,6 +100,7 @@ class Pushdata_ESP8266_SSL {
             }
             // Set CPU frequency to either 80 or 160 Mhz
             // 160 is default, unless user has called setCPUSpeed()
+            // We do this because SSL handshake time is over 3 seconds at 80 Mhz (~2 secs at 160).
             system_update_cpu_freq(cpu_speed);
             DBGPRINTHLN("BearSSL::WifiClientSecure init");
             BearSSL::WiFiClientSecure client;
@@ -113,9 +114,7 @@ class Pushdata_ESP8266_SSL {
             }
             DBGPRINTHLN("client.setKnownKey()");
             client.setKnownKey(&key);
-            //client.setInsecure();
             yield();
-            //client.setCiphersLessSecure();
             DBGPRINTHLN("client.connect()");
             unsigned long startConnect = millis();
             client.setDefaultNoDelay(true);
