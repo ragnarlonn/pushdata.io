@@ -4,7 +4,7 @@
 #include <Arduino.h>
 
 #define DEBUG
-// #undef DEBUG
+#undef DEBUG
 
 #ifdef DEBUG
 #define DBGPRINTHEADER Serial.print("Pushdata_8266_SSL: ")
@@ -21,27 +21,35 @@
 
 #ifdef ESP8266
 #include "ESP8266WiFi.h"
+#include "ESP8266WiFiMulti.h"
 #include "WiFiClientSecure.h"
 #include "BearSSLHelpers.h"
+#include "user_interface.h"
+
+ESP8266WiFiMulti _wifiMulti;
 
 class Pushdata_ESP8266_SSL {
     public:
         void setEmail(const char *emailAddress) {
             strncpy(email, emailAddress, 50);
         }
-        int connectWiFi(const char *ssid, const char *passwd) {
-            if (!connecting) {
-                WiFi.mode(WIFI_STA);
-                if (WiFi.status() != WL_CONNECTED) {
-                    connecting = true;
-                    if (passwd && strlen(passwd)>0) {
-                        WiFi.begin(ssid, passwd);
-                    } else {
-                        WiFi.begin(ssid);
-                    }
+        void addWiFi(const char *ssid, const char *passwd) {
+            _wifiMulti.addAP(ssid, passwd);
+        }
+        int monitorWiFi() {
+            int ret = _wifiMulti.run();
+            if (connecting) {
+                if (ret == WL_CONNECTED) {
+                    DBGPRINTH("Connected to network "); DBGPRINTLN(WiFi.SSID().c_str());
+                    connecting = false;
                 }
-            } 
-            return WiFi.status();
+            } else {
+                if (ret != WL_CONNECTED) {
+                    DBGPRINTHLN("Lost WiFi connection, reconnecting");
+                    connecting = true;
+                }
+            }
+            return ret;
         }
         void setApiKey(const char *key) {
             strncpy(apikey, key, 20);
@@ -68,12 +76,20 @@ class Pushdata_ESP8266_SSL {
             //ESP.wdtEnable(5000);
             return ret;
         }
+        // int argument version
+        int send(int value) {
+            return send((float)value);
+        }
         // Store data in a specific TS
         int send(const char *tsname, float value) {
             ESP.wdtDisable();
             int ret = _send(tsname, value, NULL, 0);
             ESP.wdtEnable(5000);
             return ret;
+        }
+        // int argument version
+        int send(const char *tsname, int value) {
+            return send(tsname, (float)value);
         }
         // Store data in a specific TS and with tags
         // **tags = { "key1", "val1", "key2", "val2" ... }
@@ -82,6 +98,10 @@ class Pushdata_ESP8266_SSL {
             int ret = _send(tsname, value, tags, numtags);
             ESP.wdtEnable(5000);
             return ret;
+        }
+        // int argument version
+        int send(const char *tsname, int value, const char **tags, int numtags) {
+            return send(tsname, (float)value, tags, numtags);
         }
         // Function that does the actual sending
         int _send(const char *tsname, float value, const char **tags, int numtags) {
@@ -116,7 +136,9 @@ class Pushdata_ESP8266_SSL {
             client.setKnownKey(&key);
             yield();
             DBGPRINTHLN("client.connect()");
+            #ifdef DEBUG
             unsigned long startConnect = millis();
+            #endif
             client.setDefaultNoDelay(true);
             if (!client.connect("pushdata.io", 443)) {
                 Serial.println("Pushdata_ESP8266: Error: failed to connect to pushdata.io:443");
